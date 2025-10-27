@@ -1,20 +1,17 @@
 import { config } from "dotenv";
+config(); // Load environment variables first!
+
 import express from "express";
 import { createWalletClient, http, publicActions, Hex, parseAbiItem } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
-import { paymentMiddleware, Resource } from "x402-express";
+import { paymentMiddleware } from "x402-express";
 import { facilitator } from "@coinbase/x402";
-
-config();
 
 // Ortam değişkenlerini kontrol et
 const privateKey = process.env.PRIVATE_KEY as Hex | undefined;
-const cdpApiKeyId = process.env.CDP_API_KEY_ID;
-const cdpApiKeySecret = process.env.CDP_API_KEY_SECRET;
-
-if (!privateKey || !cdpApiKeyId || !cdpApiKeySecret) {
-  throw new Error("Required environment variables for mainnet are not set (PRIVATE_KEY, CDP_API_KEY_ID, CDP_API_KEY_SECRET)");
+if (!privateKey) {
+  throw new Error("Required environment variables are not set. Please create a .env file based on .env.example");
 }
 
 // Hem ödemeleri alacak hem de ödülü gönderecek tek cüzdan
@@ -34,23 +31,31 @@ let raffleCount = 1;
 let prizePool = 0; // Toplanan ödül miktarını takip et
 
 const app = express();
-const PORT = process.env.PORT || 4025; // DigitalOcean için PORT'u ortam değişkeninden al
-
-app.use(express.static('public'));
+const PORT = process.env.PORT || 4021;
 
 app.use(
   paymentMiddleware(
     payToAddress,
     {
+      "GET /weather": {
+        price: "$1",
+        network: "base",
+        config: {
+          description: "Gets the current weather.",
+          outputSchema: {
+            type: "object",
+            properties: {
+              temperature: { type: "string" },
+              condition: { type: "string" }
+            }
+          }
+        }
+      },
       "POST /buy-1-ticket": {
         price: "$1",
         network: "base",
         config: {
           description: "Buys 1 raffle ticket.",
-          inputSchema: {
-            type: "object",
-            properties: {}
-          }
         }
       },
       "POST /buy-10-tickets": {
@@ -58,34 +63,15 @@ app.use(
         network: "base",
         config: {
           description: "Buys 10 raffle tickets.",
-          inputSchema: {
-            type: "object",
-            properties: {}
-          }
         }
       },
-      "POST /buy-20-tickets": {
-        price: "$20",
+      "POST /buy-100-tickets": {
+        price: "$100",
         network: "base",
         config: {
-          description: "Buys 20 raffle tickets.",
-          inputSchema: {
-            type: "object",
-            properties: {}
-          }
+          description: "Buys 100 raffle tickets.",
         }
       },
-      "GET /health": {
-        price: "$0.01",
-        network: "base",
-        config: {
-          description: "Checks the server status and current raffle.",
-          inputSchema: {
-            type: "object",
-            properties: {}
-          }
-        }
-      }
     } as any,
     facilitator,
   ),
@@ -98,23 +84,28 @@ const handleTicketPurchase = async (ticketCount: number, buyerAddress: string) =
   console.log(`${ticketCount} ticket(s) purchased by ${buyerAddress}. Total tickets: ${tickets.length}`);
   prizePool += ticketCount; // Her bilet için ödül havuzunu 1$ artır
 
-  if (tickets.length >= 100) {
-    drawWinnerAndPay(); // await olmadan çağırarak bir sonraki adıma geç
+  if (tickets.length >= 3) { // Test için 3 bilete düşürüldü
+    await drawWinnerAndPay();
   }
 };
 
-const executePayout = async (winnerAddress: Hex, amount: number, raffleNumber: number) => {
-  console.log("Waiting 5 seconds for RPC to sync before payout...");
+const drawWinnerAndPay = async () => {
+  console.log(`Raffle #${raffleCount} has reached ${tickets.length} tickets! Drawing a winner...`);
+  
+  const winnerAddress = tickets[Math.floor(Math.random() * tickets.length)] as Hex;
+  console.log(`The winner of raffle #${raffleCount} is ${winnerAddress}!`);
+
+  console.log("Waiting 5 seconds for RPC to sync...");
   await new Promise(resolve => setTimeout(resolve, 5000));
 
   try {
-    const usdcContractAddress = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'; // Base Mainnet USDC
+    const usdcContractAddress = '0x833589fCD6eDb6E08f4c7C32D4f71b54bda02913'; // Base Mainnet USDC
     const usdcContractAbi = [
       parseAbiItem('function transfer(address to, uint256 amount) returns (bool)'),
     ];
     
-    const amountToSend = BigInt(amount * 10**6);
-    console.log(`Attempting to send ${amount} USDC to ${winnerAddress} for raffle #${raffleNumber}...`);
+    const amountToSend = BigInt(prizePool * 10**6);
+    console.log(`Attempting to send ${prizePool} USDC to ${winnerAddress}...`);
 
     const txHash = await walletClient.writeContract({
       address: usdcContractAddress,
@@ -123,44 +114,22 @@ const executePayout = async (winnerAddress: Hex, amount: number, raffleNumber: n
       args: [winnerAddress, amountToSend],
     });
 
-    console.log(`Raffle #${raffleNumber} payout successful! Transaction hash: ${txHash}`);
+    console.log(`Payout successful! Transaction hash: ${txHash}`);
     console.log(`View on explorer: https://basescan.org/tx/${txHash}`);
 
   } catch (error) {
-    console.error(`Raffle #${raffleNumber} payout failed:`, error);
+    console.error("Payout failed:", error);
+  } finally {
+    // Çekilişi sıfırla
+    console.log(`Resetting raffle #${raffleCount}.`);
+    tickets = [];
+    prizePool = 0;
+    raffleCount++;
   }
-};
-
-const drawWinnerAndPay = () => {
-  console.log(`Raffle #${raffleCount} has reached ${tickets.length} tickets! Drawing a winner...`);
-  
-  const winnerAddress = tickets[Math.floor(Math.random() * tickets.length)] as Hex;
-  const finalPrizePool = prizePool;
-  const currentRaffleCount = raffleCount;
-
-  console.log(`The winner of raffle #${currentRaffleCount} is ${winnerAddress}! Prize: ${finalPrizePool} USDC.`);
-
-  // Ödemeyi arka planda çalıştır
-  executePayout(winnerAddress, finalPrizePool, currentRaffleCount);
-
-  // Çekilişi hemen sıfırla ve bir sonrakine geç
-  console.log(`Resetting for raffle #${currentRaffleCount + 1}.`);
-  tickets = [];
-  prizePool = 0;
-  raffleCount++;
 };
 
 app.get("/", (req, res) => {
   res.send(`Raffle Server is running! Raffle #${raffleCount} has ${tickets.length} tickets.`);
-});
-
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    status: "OK",
-    raffleNumber: raffleCount,
-    ticketsSold: tickets.length,
-    prizePool: prizePool
-  });
 });
 
 app.post("/buy-1-ticket", async (req: express.Request, res: express.Response) => {
@@ -201,7 +170,7 @@ app.post("/buy-10-tickets", async (req: express.Request, res: express.Response) 
   }
 });
 
-app.post("/buy-20-tickets", async (req: express.Request, res: express.Response) => {
+app.post("/buy-100-tickets", async (req: express.Request, res: express.Response) => {
   try {
     const paymentHeader = req.header("x-payment");
     if (!paymentHeader) {
@@ -212,12 +181,16 @@ app.post("/buy-20-tickets", async (req: express.Request, res: express.Response) 
     const paymentData = JSON.parse(paymentHeaderJson);
     const buyerAddress = paymentData.payload.authorization.from;
     
-    await handleTicketPurchase(20, buyerAddress);
-    res.json({ message: `Successfully purchased 20 tickets for ${buyerAddress}!` });
+    await handleTicketPurchase(100, buyerAddress);
+    res.json({ message: `Successfully purchased 100 tickets for ${buyerAddress}!` });
   } catch (error) {
     console.error("Error purchasing ticket:", error);
     res.status(500).json({ error: "Failed to process ticket purchase." });
   }
+});
+
+app.get("/weather", (req, res) => {
+  res.json({ temperature: "25°C", condition: "Sunny" });
 });
 
 app.listen(PORT, () => {
