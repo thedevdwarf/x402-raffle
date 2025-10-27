@@ -5,11 +5,27 @@ import express from "express";
 import { createWalletClient, http, publicActions, Hex, parseAbiItem } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
-import { paymentMiddleware } from "x402-express";
+import { paymentMiddleware, Resource } from "x402-express";
 import { facilitator } from "@coinbase/x402";
 
 // Ortam değişkenlerini kontrol et
 const privateKey = process.env.PRIVATE_KEY as Hex | undefined;
+const useMogami = process.env.USE_MOGAMI_FACILITATOR === 'true';
+
+let facilitatorConfig: any;
+
+if (useMogami) {
+  const facilitatorUrl = process.env.FACILITATOR_URL as Resource | undefined;
+  if (!facilitatorUrl) {
+    throw new Error("FACILITATOR_URL must be set in .env when USE_MOGAMI_FACILITATOR is true");
+  }
+  console.log("Using Mogami facilitator.");
+  facilitatorConfig = { url: facilitatorUrl };
+} else {
+  console.log("Using Coinbase facilitator.");
+  facilitatorConfig = facilitator;
+}
+
 if (!privateKey) {
   throw new Error("Required environment variables are not set. Please create a .env file based on .env.example");
 }
@@ -38,7 +54,7 @@ app.use(
     payToAddress,
     {
       "GET /weather": {
-        price: "$1",
+        price: "$0.0001",
         network: "base",
         config: {
           description: "Gets the current weather.",
@@ -73,7 +89,7 @@ app.use(
         }
       },
     } as any,
-    facilitator,
+    facilitatorConfig,
   ),
 );
 
