@@ -75,6 +75,17 @@ app.use(
           }
         }
       },
+      "GET /health": {
+        price: "$0.01",
+        network: "base",
+        config: {
+          description: "Checks the server status and current raffle.",
+          inputSchema: {
+            type: "object",
+            properties: {}
+          }
+        }
+      }
     } as any,
     facilitator,
   ),
@@ -141,6 +152,15 @@ const drawWinnerAndPay = () => {
 
 app.get("/", (req, res) => {
   res.send(`Raffle Server is running! Raffle #${raffleCount} has ${tickets.length} tickets.`);
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "OK",
+    raffleNumber: raffleCount,
+    ticketsSold: tickets.length,
+    prizePool: prizePool
+  });
 });
 
 app.post("/buy-1-ticket", async (req: express.Request, res: express.Response) => {
