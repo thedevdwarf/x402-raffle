@@ -36,6 +36,8 @@ let prizePool = 0; // Toplanan ödül miktarını takip et
 const app = express();
 const PORT = process.env.PORT || 4025; // DigitalOcean için PORT'u ortam değişkeninden al
 
+app.use(express.static('public'));
+
 app.use(
   paymentMiddleware(
     payToAddress,
@@ -43,30 +45,33 @@ app.use(
       "POST /buy-1-ticket": {
         price: "$1",
         network: "base",
-        extra: {
+        config: {
           description: "Buys 1 raffle ticket.",
-          outputSchema: {
-            input: { type: "http", method: "POST" }
+          inputSchema: {
+            type: "object",
+            properties: {}
           }
         }
       },
       "POST /buy-10-tickets": {
         price: "$10",
         network: "base",
-        extra: {
+        config: {
           description: "Buys 10 raffle tickets.",
-          outputSchema: {
-            input: { type: "http", method: "POST" }
+          inputSchema: {
+            type: "object",
+            properties: {}
           }
         }
       },
       "POST /buy-20-tickets": {
         price: "$20",
         network: "base",
-        extra: {
+        config: {
           description: "Buys 20 raffle tickets.",
-          outputSchema: {
-            input: { type: "http", method: "POST" }
+          inputSchema: {
+            type: "object",
+            properties: {}
           }
         }
       },
