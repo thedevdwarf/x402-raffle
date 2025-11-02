@@ -84,6 +84,12 @@ app.use(
         network: "base",
         config: {
           description: "Buys 1 raffle ticket.",
+          outputSchema: {
+            type: "object",
+            properties: {
+              message: { type: "string" }
+            }
+          }
         }
       },
       "POST /buy-10-tickets": {
@@ -91,6 +97,12 @@ app.use(
         network: "base",
         config: {
           description: "Buys 10 raffle tickets.",
+          outputSchema: {
+            type: "object",
+            properties: {
+              message: { type: "string" }
+            }
+          }
         }
       },
       "POST /buy-100-tickets": {
@@ -98,6 +110,12 @@ app.use(
         network: "base",
         config: {
           description: "Buys 100 raffle tickets.",
+          outputSchema: {
+            type: "object",
+            properties: {
+              message: { type: "string" }
+            }
+          }
         }
       },
     } as any,
