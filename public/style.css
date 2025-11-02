@@ -1,0 +1,133 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+}
+
+.container {
+    background-color: #162447;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    max-width: 600px;
+    width: 90%;
+}
+
+.logo {
+    width: 100px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+h1 {
+    color: #1f78b4;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+p {
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+
+#raffle-status {
+    background-color: #1f4068;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    font-weight: 600;
+    border: 1px solid #1b2a49;
+}
+
+.wallet-info {
+    background-color: #1f4068;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    font-weight: 600;
+    border: 1px solid #1b2a49;
+    word-wrap: break-word;
+}
+
+.wallet-info span {
+    font-family: monospace;
+    font-size: 0.95em;
+    color: #61dafb;
+}
+
+.button-group {
+    margin: 30px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+}
+
+.button {
+    background-color: #1f78b4;
+    color: #ffffff;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    text-decoration: none;
+}
+
+.button:hover {
+    background-color: #155a8a;
+    transform: translateY(-2px);
+}
+
+.button.secondary {
+    background-color: transparent;
+    border: 2px solid #1f78b4;
+}
+
+.button.secondary:hover {
+    background-color: #1f78b4;
+}
+
+.steps-container {
+    margin-top: 30px;
+    text-align: left;
+}
+
+.step {
+    background-color: #1f4068;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border-left: 4px solid #1f78b4;
+}
+
+.step h3 {
+    margin-top: 0;
+    color: #e0e0e0;
+}
+
+.step p {
+    margin-bottom: 0;
+    font-size: 1em;
+}
+
+.step a {
+    color: #61dafb;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.step a:hover {
+    text-decoration: underline;
+}

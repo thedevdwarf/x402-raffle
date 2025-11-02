@@ -2,6 +2,7 @@ import { config } from "dotenv";
 config(); // Load environment variables first!
 
 import express from "express";
+import path from "path";
 import { createWalletClient, http, publicActions, Hex, parseAbiItem } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { base } from "viem/chains";
@@ -49,6 +50,16 @@ let prizePool = 0; // Toplanan ödül miktarını takip et
 
 const app = express();
 const PORT = process.env.PORT || 4021;
+
+app.use(express.static("public"));
+
+app.get("/status", (req, res) => {
+  res.send(`Raffle Server is running! Raffle #${raffleCount} has ${tickets.length} tickets.`);
+});
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(process.cwd(), 'raffle-server-standalone', 'public', 'index.html'));
+});
 
 app.use(
   paymentMiddleware(
@@ -145,9 +156,6 @@ const drawWinnerAndPay = async () => {
   }
 };
 
-app.get("/", (req, res) => {
-  res.send(`Raffle Server is running! Raffle #${raffleCount} has ${tickets.length} tickets.`);
-});
 
 app.post("/buy-1-ticket", async (req: express.Request, res: express.Response) => {
   try {

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>x402 Raffle Server</title>
+    <meta name="description" content="Join the x402 powered raffle on Base Mainnet. Buy tickets and win the prize pool!">
+    <meta name="keywords" content="raffle, x402, Base, crypto, blockchain">
+    <meta property="og:title" content="x402 Raffle Server">
+    <meta property="og:description" content="Join the x402 powered raffle on Base Mainnet.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="images/icon_raffle.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="x402 Raffle Server">
+    <meta name="twitter:description" content="Join the x402 powered raffle on Base Mainnet.">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <img src="images/icon_raffle.png" alt="Raffle Logo" class="logo">
+        <h1>Welcome to the x402 Raffle!</h1>
+        <p>Join the decentralized raffle powered by x402 on the Base Mainnet. Purchase tickets to enter and win the entire prize pool!</p>
+        <div id="raffle-status">Loading raffle status...</div>
+        <div class="wallet-info">
+            <strong>Raffle Wallet:</strong> <span>0xf69BD5bf2379A1330402693E7b086DEC22Bb7F9B</span>
+        </div>
+        
+        <h2>How to Join the Raffle</h2>
+        <div class="steps-container">
+            <div class="step">
+                <h3>Step 1: Visit x402scan</h3>
+                <p>Go to our official server page on <a href="https://www.x402scan.com/server/1c19fc1c-f8ed-4788-9ae8-4e5ae197255e" target="_blank">x402scan.com</a> and connect your Base-compatible wallet.</p>
+            </div>
+            <div class="step">
+                <h3>Step 2: Choose Your Tickets</h3>
+                <p>On the x402scan interface, you'll find options to buy 1, 10, or 100 tickets. Select the bundle you want to purchase.</p>
+            </div>
+            <div class="step">
+                <h3>Step 3: Confirm Payment</h3>
+                <p>Approve the transaction directly on x402scan. The x402 protocol handles payments instantly and securely.</p>
+            </div>
+            <div class="step">
+                <h3>Step 4: You're In!</h3>
+                <p>Once your payment is confirmed, your tickets are automatically entered into the current raffle. Keep an eye on the status to see when the winner is drawn!</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchStatus() {
+            try {
+                const response = await fetch('/status');
+                const text = await response.text();
+                document.getElementById('raffle-status').innerText = text;
+            } catch (error) {
+                console.error('Error fetching status:', error);
+                document.getElementById('raffle-status').innerText = 'Could not load raffle status.';
+            }
+        }
+
+        // Fetch status on page load and then every 10 seconds
+        fetchStatus();
+        setInterval(fetchStatus, 10000);
+    </script>
+</body>
+</html>
